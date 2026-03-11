@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 void main() => runApp(MyApp());
 
+// =================== MAIN APP ===================
 class MyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -24,25 +25,35 @@ class _LoginPageState extends State<LoginPage> {
 
   @override
   Widget build(BuildContext context) {
+    // Responsive logo width
+    double logoWidth = MediaQuery.of(context).size.width * 0.4;
+
     return Scaffold(
       backgroundColor: Colors.white,
       body: SingleChildScrollView(
         child: Padding(
           padding: const EdgeInsets.all(8.0),
           child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
             children: [
               SizedBox(height: 50),
-              Image.asset("assets/images/logo.png", width: 200),
+
+              // Logo
+              Image.asset(
+                "assets/images/logo.png",
+                width: logoWidth,
+                fit: BoxFit.contain,
+              ),
+              SizedBox(height: 20),
 
               // Username
               Padding(
-                padding: const EdgeInsets.fromLTRB(25, 20, 20, 5),
+                padding: const EdgeInsets.fromLTRB(25, 0, 20, 5),
                 child: Row(
                   children: [
                     Text(
                       "Enter Username",
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -52,12 +63,12 @@ class _LoginPageState extends State<LoginPage> {
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: "Use email or Phone Number",
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20)),
                     prefixIcon: Icon(Icons.person),
                   ),
                 ),
               ),
-
               SizedBox(height: 20),
 
               // Password
@@ -67,7 +78,8 @@ class _LoginPageState extends State<LoginPage> {
                   children: [
                     Text(
                       "Enter Password",
-                      style: TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
+                      style:
+                          TextStyle(fontSize: 14, fontWeight: FontWeight.w700),
                     ),
                   ],
                 ),
@@ -78,10 +90,13 @@ class _LoginPageState extends State<LoginPage> {
                   obscureText: _obscurePassword,
                   decoration: InputDecoration(
                     hintText: "PIN or Password",
-                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(20)),
+                    border: OutlineInputBorder(
+                        borderRadius: BorderRadius.circular(20)),
                     prefixIcon: Icon(Icons.lock),
                     suffixIcon: IconButton(
-                      icon: Icon(_obscurePassword ? Icons.visibility : Icons.visibility_off),
+                      icon: Icon(_obscurePassword
+                          ? Icons.visibility
+                          : Icons.visibility_off),
                       onPressed: () {
                         setState(() {
                           _obscurePassword = !_obscurePassword;
@@ -91,7 +106,6 @@ class _LoginPageState extends State<LoginPage> {
                   ),
                 ),
               ),
-
               SizedBox(height: 20),
 
               // Login Button
@@ -131,7 +145,9 @@ class _LoginPageState extends State<LoginPage> {
                           },
                           child: Text(
                             "Sign up",
-                            style: TextStyle(color: Colors.amber, fontWeight: FontWeight.w600),
+                            style: TextStyle(
+                                color: Colors.amber,
+                                fontWeight: FontWeight.w600),
                           ),
                         ),
                       ],
@@ -142,7 +158,8 @@ class _LoginPageState extends State<LoginPage> {
                         SizedBox(width: 5),
                         Text(
                           "Reset",
-                          style: TextStyle(color: Colors.amber, fontWeight: FontWeight.w600),
+                          style: TextStyle(
+                              color: Colors.amber, fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -159,7 +176,7 @@ class _LoginPageState extends State<LoginPage> {
   }
 }
 
-// =================== SIGNUP PAGE ===================
+ // =================== SIGNUP PAGE ===================
 class SignUpPage extends StatefulWidget {
   @override
   _SignUpPageState createState() => _SignUpPageState();
@@ -171,40 +188,47 @@ class _SignUpPageState extends State<SignUpPage> {
 
   @override
   Widget build(BuildContext context) {
+    double logoWidth = MediaQuery.of(context).size.width * 0.35;
+
     return Scaffold(
       backgroundColor: Colors.white,
-      // Use PreferredSize for custom curved AppBar
-      appBar: PreferredSize(
-        preferredSize: Size.fromHeight(60),
-        child: Container(
-          margin: EdgeInsets.fromLTRB(20, 20, 20, 0),
-          decoration: BoxDecoration(
-            color: Color(0xFF000080),
-            borderRadius: BorderRadius.circular(20),
-          ),
-          child: Center(
-            child: Text(
-              "Sign Up",
-              style: TextStyle(
-                color: Colors.white,
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-          ),
-        ),
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.all(8.0),
+
+      body: SafeArea(
+        child: SingleChildScrollView(
           child: Column(
             children: [
-              SizedBox(height: 20),
-              Image.asset("assets/images/logo.png", width: 150),
+
+              // Sign Up page
+              Container(
+                height: 60,
+                margin: EdgeInsets.fromLTRB(20, 20, 20, 20),
+                decoration: BoxDecoration(
+                  color: Color(0xFF000080),
+                  borderRadius: BorderRadius.circular(20),
+                ),
+                alignment: Alignment.center,
+                child: Text(
+                  "Sign Up",
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+
+              // Logo
+              Image.asset(
+                "assets/images/logo.png",
+                width: logoWidth,
+                fit: BoxFit.contain,
+              ),
+
+              SizedBox(height: 25),
 
               // Name
               Padding(
-                padding: const EdgeInsets.fromLTRB(20, 10, 20, 0),
+                padding: const EdgeInsets.fromLTRB(20, 0, 20, 0),
                 child: TextField(
                   decoration: InputDecoration(
                     hintText: "Full Name",
@@ -215,6 +239,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
               ),
+
               SizedBox(height: 15),
 
               // Email
@@ -230,6 +255,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
               ),
+
               SizedBox(height: 15),
 
               // Password
@@ -245,7 +271,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     prefixIcon: Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscurePassword ? Icons.visibility : Icons.visibility_off,
+                        _obscurePassword
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -256,6 +284,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
               ),
+
               SizedBox(height: 15),
 
               // Confirm Password
@@ -271,7 +300,9 @@ class _SignUpPageState extends State<SignUpPage> {
                     prefixIcon: Icon(Icons.lock),
                     suffixIcon: IconButton(
                       icon: Icon(
-                        _obscureConfirm ? Icons.visibility : Icons.visibility_off,
+                        _obscureConfirm
+                            ? Icons.visibility
+                            : Icons.visibility_off,
                       ),
                       onPressed: () {
                         setState(() {
@@ -282,6 +313,7 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                 ),
               ),
+
               SizedBox(height: 20),
 
               // Sign Up Button
@@ -297,7 +329,10 @@ class _SignUpPageState extends State<SignUpPage> {
                   ),
                   child: Text(
                     "Sign Up",
-                    style: TextStyle(color: Colors.white, fontSize: 14),
+                    style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 14,
+                    ),
                   ),
                 ),
               ),
