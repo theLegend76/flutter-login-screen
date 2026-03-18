@@ -345,3 +345,21 @@ class _SignUpPageState extends State<SignUpPage> {
     );
   }
 }
+// import 'package:flutter/material.dart';
+// import 'views/dashboard/dashboard_screen.dart'; // Make sure path matches
+
+// void main() {
+//   runApp(const DashboardApp());
+// }
+
+// class DashboardApp extends StatelessWidget {
+//   const DashboardApp({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return MaterialApp(
+//       debugShowCheckedModeBanner: false,
+//       home: const DashboardScreen(),
+//     );
+//   }
+// }
