@@ -52,31 +52,44 @@ class _DreamAriseLoginScreenState
     final contact = _emailController.text;
     
     try {
-      final response = await Supabase.instance.client
+      final List<dynamic> response = await Supabase.instance.client
           .from('profiles')
           .select()
           .eq(contact.contains('@') ? 'email' : 'phone', contact)
-          .maybeSingle();
+          .limit(1);
 
       if (!mounted) return;
       
-      if (response != null) {
+      final bool exists = response.isNotEmpty;
+      
+      if (exists) {
         Navigator.push(
           context,
           MaterialPageRoute(builder: (_) => ExistingLoginScreen(contactInfo: contact)),
         );
       } else {
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (_) => VerificationScreen(contactInfo: contact)),
-        );
+        try {
+          if (contact.contains('@')) {
+            await Supabase.instance.client.auth.signInWithOtp(email: contact);
+          } else {
+            await Supabase.instance.client.auth.signInWithOtp(phone: contact);
+          }
+          if (!mounted) return;
+          Navigator.push(
+            context,
+            MaterialPageRoute(builder: (_) => VerificationScreen(contactInfo: contact)),
+          );
+        } catch (e) {
+          if (!mounted) return;
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Failed to send OTP code: $e'), backgroundColor: Colors.red, duration: const Duration(seconds: 4)),
+          );
+        }
       }
     } catch (e) {
       if (!mounted) return;
-      // Fallback to verification screen on error (e.g., network issues)
-      Navigator.push(
-        context,
-        MaterialPageRoute(builder: (_) => VerificationScreen(contactInfo: contact)),
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Database Error: $e'), backgroundColor: Colors.red, duration: const Duration(seconds: 4)),
       );
     } finally {
       if (mounted) setState(() => _isLoading = false);

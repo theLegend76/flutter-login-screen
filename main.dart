@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:provider/provider.dart';
+
 import 'screens/home/home_screen.dart';
+import 'providers/product_provider.dart';
+import 'providers/cart_provider.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -13,7 +17,15 @@ Future<void> main() async {
     anonKey: dotenv.env['SUPABASE_ANON_KEY']!,
   );
 
-  runApp(const DreamAriseApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (ctx) => ProductProvider()),
+        ChangeNotifierProvider(create: (ctx) => CartProvider()),
+      ],
+      child: const DreamAriseApp(),
+    ),
+  );
 }
 
 class DreamAriseApp extends StatelessWidget {

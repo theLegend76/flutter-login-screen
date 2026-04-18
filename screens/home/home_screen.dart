@@ -1,11 +1,16 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:provider/provider.dart';
 
 import '../../widgets/ad_banner.dart';
 import '../../widgets/product_cart.dart';
 import '../../widgets/custom_drawer.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../auth/login_screen.dart';
+import '../cart/cart_screen.dart';
+import '../saved/saved_screen.dart';
+import '../../providers/product_provider.dart';
+import '../../providers/cart_provider.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -51,19 +56,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final List<String> categories = ["All", "Electronics", "Fashion", "Sneakers", "Watch", "Bags", "Home"];
   int _selectedCategoryIndex = 0;
 
-  // Mock data for 12 products
-  final List<Map<String, dynamic>> products = List.generate(12, (index) {
-    const prices = [
-      "Ksh 1,800", "Ksh 25,000", "Ksh 3,000", "Ksh 2,000",
-      "Ksh 1,200", "Ksh 4,500", "Ksh 800", "Ksh 15,000",
-      "Ksh 6,500", "Ksh 9,999", "Ksh 3,450", "Ksh 12,000"
-    ];
-    return {
-      "image": "assets/images/Background.png",
-      "title": "Premium Product ${index + 1}",
-      "price": prices[index],
-    };
-  });
+  // Mock data for products is now handled by ProductProvider
 
   @override
   void initState() {
@@ -105,8 +98,12 @@ class _HomeScreenState extends State<HomeScreen> {
       // 📂 MODERNISED DRAWER (MENU) 
       drawer: const CustomDrawer(),
 
-      body: SafeArea(
-        child: CustomScrollView(
+      body: IndexedStack(
+        index: _currentIndex == 3 ? 0 : _currentIndex,
+        children: [
+          SafeArea(
+            child: Consumer<ProductProvider>(
+              builder: (ctx, productsData, child) => CustomScrollView(
           physics: const BouncingScrollPhysics(),
           slivers: [
             // Header Section
@@ -284,17 +281,23 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
                 delegate: SliverChildBuilderDelegate(
                   (context, index) {
-                    return ProductCard(product: products[index]);
+                    return ProductCard(product: productsData.items[index]);
                   },
-                  childCount: products.length,
+                  childCount: productsData.items.length,
                 ),
               ),
             ),
 
             const SliverToBoxAdapter(child: SizedBox(height: 30)),
-          ],
+              ],
+            ),
+          ),
         ),
-      ),
+        const CartScreen(),
+        const SavedScreen(),
+        const SizedBox.shrink(),
+      ],
+    ), // Added closing parenthesis here for IndexedStack
 
       // 🔻 FLOATING NAV BAR REVISED
       bottomNavigationBar: Container(
@@ -324,6 +327,25 @@ class _HomeScreenState extends State<HomeScreen> {
 
   Widget _navItem(IconData icon, String label, int index) {
     bool isSelected = _currentIndex == index;
+    
+    Widget iconWidget = Icon(
+      icon,
+      color: isSelected ? const Color(0xFF003366) : Colors.grey.shade400,
+      size: 26,
+    );
+
+    if (index == 1) {
+      iconWidget = Consumer<CartProvider>(
+        builder: (_, cart, ch) => Badge(
+          label: Text(cart.itemCount.toString(), style: const TextStyle(fontSize: 10, fontWeight: FontWeight.bold, color: Colors.white)),
+          isLabelVisible: cart.itemCount > 0,
+          backgroundColor: Colors.redAccent,
+          child: ch,
+        ),
+        child: iconWidget,
+      );
+    }
+
     return GestureDetector(
       onTap: () {
         if (index == 1 || index == 2 || index == 3) {
@@ -344,11 +366,7 @@ class _HomeScreenState extends State<HomeScreen> {
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(
-            icon,
-            color: isSelected ? const Color(0xFF003366) : Colors.grey.shade400,
-            size: 26,
-          ),
+          iconWidget,
           const SizedBox(height: 4),
           Text(
             label,

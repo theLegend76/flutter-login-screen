@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'create_password_screen.dart';
 import 'reset_password_screen.dart';
 
@@ -15,8 +16,9 @@ class VerificationScreen extends StatefulWidget {
 }
 
 class _VerificationScreenState extends State<VerificationScreen> {
-  final List<TextEditingController> _codeControllers = List.generate(4, (_) => TextEditingController());
-  final List<FocusNode> _focusNodes = List.generate(4, (_) => FocusNode());
+  final List<TextEditingController> _codeControllers = List.generate(6, (_) => TextEditingController());
+  final List<FocusNode> _focusNodes = List.generate(6, (_) => FocusNode());
+  bool _isLoading = false;
   
   bool _isTimerRunning = false;
   int _start = 60;
@@ -40,7 +42,7 @@ class _VerificationScreenState extends State<VerificationScreen> {
 
   void _onCodeChanged(String value, int index) {
     if (value.isNotEmpty) {
-      if (index < 3) {
+      if (index < 5) {
         FocusScope.of(context).requestFocus(_focusNodes[index + 1]);
       } else {
         FocusScope.of(context).unfocus();
@@ -128,17 +130,17 @@ class _VerificationScreenState extends State<VerificationScreen> {
                       const SizedBox(height: 30),
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-                        children: List.generate(4, (index) {
+                        children: List.generate(6, (index) {
                           return SizedBox(
-                            width: 60,
-                            height: 60,
+                            width: 45,
+                            height: 55,
                             child: TextField(
                               controller: _codeControllers[index],
                               focusNode: _focusNodes[index],
                               keyboardType: TextInputType.number,
                               textAlign: TextAlign.center,
                               maxLength: 1,
-                              style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+                              style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold),
                               decoration: InputDecoration(
                                 counterText: "",
                                 filled: true,
@@ -163,18 +165,44 @@ class _VerificationScreenState extends State<VerificationScreen> {
                         width: double.infinity,
                         height: 55,
                         child: ElevatedButton(
-                          onPressed: _isCodeComplete()
-                              ? () {
-                                  if (widget.isForgotPassword) {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => ResetPasswordScreen(contactInfo: widget.contactInfo)),
+                          onPressed: (_isCodeComplete() && !_isLoading)
+                              ? () async {
+                                  setState(() => _isLoading = true);
+                                  try {
+                                    final code = _codeControllers.map((c) => c.text).join();
+                                    
+                                    if (widget.isForgotPassword) {
+                                      await Supabase.instance.client.auth.verifyOTP(
+                                        type: OtpType.recovery,
+                                        token: code,
+                                        email: widget.contactInfo.contains('@') ? widget.contactInfo : null,
+                                        phone: !widget.contactInfo.contains('@') ? widget.contactInfo : null,
+                                      );
+                                      if (!context.mounted) return;
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => ResetPasswordScreen(contactInfo: widget.contactInfo)),
+                                      );
+                                    } else {
+                                      await Supabase.instance.client.auth.verifyOTP(
+                                        type: OtpType.magiclink,
+                                        token: code,
+                                        email: widget.contactInfo.contains('@') ? widget.contactInfo : null,
+                                        phone: !widget.contactInfo.contains('@') ? widget.contactInfo : null,
+                                      );
+                                      if (!context.mounted) return;
+                                      Navigator.push(
+                                        context,
+                                        MaterialPageRoute(builder: (_) => CreatePasswordScreen(contactInfo: widget.contactInfo)),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    if (!context.mounted) return;
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(content: Text('Invalid Code or Error: $e'), backgroundColor: Colors.red),
                                     );
-                                  } else {
-                                    Navigator.push(
-                                      context,
-                                      MaterialPageRoute(builder: (_) => CreatePasswordScreen(contactInfo: widget.contactInfo)),
-                                    );
+                                  } finally {
+                                    if (mounted) setState(() => _isLoading = false);
                                   }
                                 }
                               : null,
@@ -185,10 +213,12 @@ class _VerificationScreenState extends State<VerificationScreen> {
                               borderRadius: BorderRadius.circular(8),
                             ),
                           ),
-                          child: const Text(
-                            "Submit",
-                            style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
-                          ),
+                          child: _isLoading 
+                            ? const SizedBox(height: 20, width: 20, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                            : const Text(
+                                "Submit",
+                                style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                              ),
                         ),
                       ),
                       const SizedBox(height: 20),

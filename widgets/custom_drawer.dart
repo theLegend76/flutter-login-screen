@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import '../screens/auth/login_screen.dart';
+import '../screens/profile/settings_screen.dart';
 
 class CustomDrawer extends StatelessWidget {
   const CustomDrawer({super.key});
@@ -57,7 +58,10 @@ class CustomDrawer extends StatelessWidget {
           ListTile(
             leading: const Icon(Icons.settings_outlined),
             title: const Text("Settings", style: TextStyle(fontWeight: FontWeight.w600)),
-            onTap: () {},
+            onTap: () {
+              Navigator.pop(context); // Close the drawer
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsScreen()));
+            },
           ),
           ListTile(
             leading: const Icon(Icons.help_outline),

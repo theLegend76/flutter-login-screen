@@ -321,19 +321,32 @@ class SignUpScreenState extends State<SignUpScreen> {
 
                           final isEmail = widget.contactInfo.contains('@');
 
-                          // Supabase Sign Up
-                          await Supabase.instance.client.auth.signUp(
-                            email: isEmail ? widget.contactInfo : null,
-                            phone: !isEmail ? widget.contactInfo : null,
-                            password: widget.password,
-                            data: {
+                          // User is already authenticated via OTP. Update password, metadata, and profile.
+                          final user = Supabase.instance.client.auth.currentUser;
+                          if (user != null) {
+                            await Supabase.instance.client.auth.updateUser(
+                              UserAttributes(
+                                password: widget.password,
+                                data: {
+                                  'first_name': _firstNameController.text,
+                                  'last_name': _lastNameController.text,
+                                  'phone': _phoneController.text,
+                                  'country_code': _selectedCountry,
+                                  'dob': _birthDateController.text,
+                                },
+                              )
+                            );
+
+                            await Supabase.instance.client.from('profiles').upsert({
+                              'id': user.id,
+                              if (isEmail) 'email': widget.contactInfo,
+                              'phone': _phoneController.text,
                               'first_name': _firstNameController.text,
                               'last_name': _lastNameController.text,
-                              'phone': _phoneController.text,
                               'country_code': _selectedCountry,
                               'dob': _birthDateController.text,
-                            },
-                          );
+                            });
+                          }
 
                           // On success, navigate to HomeScreen
                           nav.pushAndRemoveUntil(

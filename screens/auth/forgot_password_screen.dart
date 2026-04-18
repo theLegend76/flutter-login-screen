@@ -18,7 +18,7 @@ class _ForgotPasswordScreenState extends State<ForgotPasswordScreen> {
     setState(() => _isLoading = true);
     try {
       if (widget.contactInfo.contains('@')) {
-        await Supabase.instance.client.auth.signInWithOtp(email: widget.contactInfo);
+        await Supabase.instance.client.auth.resetPasswordForEmail(widget.contactInfo);
       } else {
         await Supabase.instance.client.auth.signInWithOtp(phone: widget.contactInfo);
       }
