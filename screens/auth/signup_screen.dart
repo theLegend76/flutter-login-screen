@@ -1,7 +1,14 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/gestures.dart';
+import 'coming_soon_screen.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import '../home/home_screen.dart';
 
 class SignUpScreen extends StatefulWidget {
-  const SignUpScreen({super.key});
+  final String contactInfo;
+  final String password;
+
+  const SignUpScreen({super.key, required this.contactInfo, required this.password});
 
   @override
   SignUpScreenState createState() => SignUpScreenState();
@@ -35,11 +42,33 @@ class SignUpScreenState extends State<SignUpScreen> {
     {"code": "+256", "name": "Uganda"},
   ];
 
-  bool _allFieldsValid() {
-    return _formKey.currentState?.validate() == true && _agreedToTerms;
+  @override
+  void initState() {
+    super.initState();
+    void updateState() => setState(() {});
+    _firstNameController.addListener(updateState);
+    _lastNameController.addListener(updateState);
+    _birthDateController.addListener(updateState);
+    _phoneController.addListener(updateState);
   }
 
-  // 🔥 UPDATED DATE PICKER (WIDTH + COLORS)
+  @override
+  void dispose() {
+    _firstNameController.dispose();
+    _lastNameController.dispose();
+    _birthDateController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
+  bool _allFieldsFilled() {
+    return _firstNameController.text.isNotEmpty &&
+        _lastNameController.text.isNotEmpty &&
+        _birthDateController.text.isNotEmpty &&
+        _phoneController.text.isNotEmpty &&
+        _agreedToTerms;
+  }
+
   Future<void> _pickBirthDate() async {
     DateTime tempDate = _selectedDate ?? DateTime(2000);
 
@@ -55,10 +84,9 @@ class SignUpScreenState extends State<SignUpScreen> {
             builder: (context, setStateDialog) {
               return SizedBox(
                 height: 420,
-                width: 320, // ✅ reduced width
+                width: 320,
                 child: Column(
                   children: [
-                    // ✅ HEADER
                     Container(
                       width: double.infinity,
                       padding: const EdgeInsets.symmetric(
@@ -91,19 +119,14 @@ class SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
 
-                    // 📅 CALENDAR WITH CUSTOM COLORS
                     Expanded(
                       child: Theme(
                         data: ThemeData.dark().copyWith(
-                          colorScheme: ColorScheme.dark(
-                            primary: Colors.orangeAccent, // selected circle
+                          colorScheme: const ColorScheme.dark(
+                            primary: Colors.orangeAccent,
                             onPrimary: Colors.white,
                             surface: Colors.black,
-                            onSurface: Colors.white, // numbers
-                          ),
-                          textTheme: const TextTheme(
-                            bodyMedium: TextStyle(color: Colors.white),
-                            titleMedium: TextStyle(color: Colors.white),
+                            onSurface: Colors.white,
                           ),
                         ),
                         child: CalendarDatePicker(
@@ -119,7 +142,6 @@ class SignUpScreenState extends State<SignUpScreen> {
                       ),
                     ),
 
-                    // 🔘 BUTTONS
                     Padding(
                       padding: const EdgeInsets.symmetric(vertical: 10),
                       child: Row(
@@ -134,8 +156,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                               Navigator.pop(context);
                             },
                             child: const Text("Clear",
-                                style:
-                                    TextStyle(color: Colors.orangeAccent)),
+                                style: TextStyle(color: Colors.orangeAccent)),
                           ),
                           TextButton(
                             onPressed: () => Navigator.pop(context),
@@ -152,8 +173,7 @@ class SignUpScreenState extends State<SignUpScreen> {
                               Navigator.pop(context);
                             },
                             child: const Text("Set",
-                                style:
-                                    TextStyle(color: Colors.orangeAccent)),
+                                style: TextStyle(color: Colors.orangeAccent)),
                           ),
                         ],
                       ),
@@ -175,15 +195,15 @@ class SignUpScreenState extends State<SignUpScreen> {
 
   String _formatMonth(DateTime date) {
     const months = [
-      "Jan", "Feb", "Mar", "Apr", "May", "Jun",
-      "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
+      "Jan","Feb","Mar","Apr","May","Jun",
+      "Jul","Aug","Sep","Oct","Nov","Dec"
     ];
     return months[date.month - 1];
   }
 
   @override
   Widget build(BuildContext context) {
-    final bool isContinueEnabled = _allFieldsValid();
+    final bool isContinueEnabled = _allFieldsFilled();
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -225,6 +245,8 @@ class SignUpScreenState extends State<SignUpScreen> {
                   textAlign: TextAlign.center,
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
+
+                const SizedBox(height: 10),
 
                 const SizedBox(height: 25),
 
@@ -290,17 +312,51 @@ class SignUpScreenState extends State<SignUpScreen> {
                 SizedBox(
                   height: 55,
                   child: ElevatedButton(
-                    onPressed: isContinueEnabled ? () {} : null,
+                    onPressed: isContinueEnabled ? () async {
+                      if (_formKey.currentState!.validate()) {
+                          final sm = ScaffoldMessenger.of(context);
+                          final nav = Navigator.of(context);
+                        try {
+                          // Show loading indicator wrapper or just await
+
+                          final isEmail = widget.contactInfo.contains('@');
+
+                          // Supabase Sign Up
+                          await Supabase.instance.client.auth.signUp(
+                            email: isEmail ? widget.contactInfo : null,
+                            phone: !isEmail ? widget.contactInfo : null,
+                            password: widget.password,
+                            data: {
+                              'first_name': _firstNameController.text,
+                              'last_name': _lastNameController.text,
+                              'phone': _phoneController.text,
+                              'country_code': _selectedCountry,
+                              'dob': _birthDateController.text,
+                            },
+                          );
+
+                          // On success, navigate to HomeScreen
+                          nav.pushAndRemoveUntil(
+                            MaterialPageRoute(builder: (_) => const HomeScreen()),
+                            (route) => false,
+                          );
+                        } catch (e) {
+                          sm.showSnackBar(
+                            SnackBar(content: Text('Sign up failed: ${e.toString()}')),
+                          );
+                        }
+                      }
+                    } : null,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: Colors.orangeAccent,
-                      disabledBackgroundColor: Colors.grey.shade300,
+                      backgroundColor: const Color(0xFF003366),
+                      disabledBackgroundColor: const Color(0xFF003366).withValues(alpha: 0.5),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(8),
                       ),
                     ),
                     child: const Text(
                       "Continue",
-                      style: TextStyle(color: Colors.white, fontSize: 16),
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
                     ),
                   ),
                 ),
@@ -315,16 +371,24 @@ class SignUpScreenState extends State<SignUpScreen> {
                       onChanged: (val) =>
                           setState(() => _agreedToTerms = val ?? false),
                     ),
-                    const Flexible(
+                    Flexible(
                       child: Text.rich(
                         TextSpan(
                           text: "I read the ",
                           children: [
                             TextSpan(
                               text: "Terms and Conditions",
-                              style: TextStyle(
+                              style: const TextStyle(
                                 color: Colors.orangeAccent,
+                                fontWeight: FontWeight.bold,
                               ),
+                              recognizer: TapGestureRecognizer()
+                                ..onTap = () {
+                                  Navigator.push(
+                                    context,
+                                    MaterialPageRoute(builder: (_) => const ComingSoonScreen()),
+                                  );
+                                },
                             ),
                           ],
                         ),
@@ -371,7 +435,6 @@ class SignUpScreenState extends State<SignUpScreen> {
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(8),
       ),
-      errorStyle: const TextStyle(height: 0.8),
     );
   }
 }
